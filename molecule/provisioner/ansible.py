@@ -21,9 +21,10 @@
 import collections
 import os
 
+import jinja2
+import m9dicts
 import yaml
 import yaml.representer
-import jinja2
 
 from molecule import ansible_playbook
 from molecule import util
@@ -108,6 +109,20 @@ class Ansible(object):
           host_vars:
             foo1-01:
               - set_this_value: True
+
+    Children allow the creation of groups of groups.  Remember Molecule appends
+    the name of the scenario to the hostsname.  When referencing hosts this
+    must be done manually, or by using Molecule's `instance_with_scenario_name`
+    built-in filter plugin.
+
+    .. code-block:: yaml
+
+        provisioner:
+          name: ansible
+          children:
+            name_of_group:
+              hosts:
+                instance-1-default: None
     """
 
     def __init__(self, config):
@@ -177,6 +192,10 @@ class Ansible(object):
         return self._config.config['provisioner']['group_vars']
 
     @property
+    def children(self):
+        return self._config.config['provisioner']['children']
+
+    @property
     def inventory(self):
         # ungrouped:
         #   hosts:
@@ -194,6 +213,7 @@ class Ansible(object):
                 instance_name = platform['name']
                 connection_options = self._config.driver.connection_options
                 dd[group]['hosts'][instance_name] = connection_options
+        dd['children'] = self.children
 
         return dd
 
@@ -249,12 +269,10 @@ class Ansible(object):
         :return: None
         """
         self._verify_inventory()
-        yaml.add_representer(collections.defaultdict,
-                             yaml.representer.Representer.represent_dict)
 
-        util.write_file(self.inventory_file, yaml.dump(self.inventory))
-        # TODO(retr0h): Move to safe dump
-        #  util.write_file(self.inventory_file, util.safe_dump(self.inventory))
+        # Convert the dictlike object to a dict for safe dumping.
+        inventory = m9dicts.convert_to(self.inventory)
+        util.write_file(self.inventory_file, util.safe_dump(inventory))
 
     def write_config(self):
         """

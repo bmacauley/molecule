@@ -183,6 +183,7 @@ class Config(object):
                 'options': {},
                 'host_vars': {},
                 'group_vars': {},
+                'children': {},
             },
             'scenario': {
                 'name': 'default',

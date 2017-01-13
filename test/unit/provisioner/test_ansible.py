@@ -52,6 +52,13 @@ def ansible_data():
                 'example_group2': [{
                     'foo': 'bar'
                 }],
+            },
+            'children': {
+                'group_name': {
+                    'hosts': {
+                        'instance-2-default': None
+                    }
+                }
             }
         }
     }
@@ -129,6 +136,12 @@ def test_group_vars_property(ansible_instance):
     assert x == ansible_instance.group_vars
 
 
+def test_children_property(ansible_instance):
+    x = {'group_name': {'hosts': {'instance-2-default': None}}}
+
+    assert x == ansible_instance.children
+
+
 def test_inventory_property(ansible_instance):
     x = {
         'bar': {
@@ -152,6 +165,13 @@ def test_inventory_property(ansible_instance):
             'hosts': {
                 'instance-2-default': {
                     'ansible_connection': 'docker'
+                }
+            }
+        },
+        'children': {
+            'group_name': {
+                'hosts': {
+                    'instance-2-default': None
                 }
             }
         }
